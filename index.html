@@ -88,13 +88,20 @@
 	var myElement = document.getElementById('back');
 	var output = document.getElementById('element');
 	var mc = new Hammer(myElement);
-
-	// Events
-	mc.add( new Hammer.Tap({ event: 'doubletap', taps: 2 }) );
 	
-	mc.on("panleft panright press doubletap tap", function(event){
+	// Enable events
+	mc.get('pinch').set({enable: true});	
+
+	// Events	
+	mc.on("pinchin pinchout", function(event){
 		output.innerHTML = event.type + ' gesture detected.';
-		gyro.calibrate();	
+		con.sendGesture(event.type);
+	});
+	
+	mc.on("tap doubletap", function(event){
+		output.innerHTML = event.type + ' gesture detected.';
+		con.sendGesture(event.type);
+		//gyro.calibrate();	
 	});
 	
 	</script>

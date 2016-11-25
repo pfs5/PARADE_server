@@ -60,6 +60,7 @@ Connection = function ()
     this.sendMeasurements = function (mesurements)
     {
         var values = [
+        	'measurements',
             mesurements.x.toFixed(this.precision),
             mesurements.y.toFixed(this.precision),
             mesurements.z.toFixed(this.precision),
@@ -72,6 +73,12 @@ Connection = function ()
         //because first character will get lost on the server side
         this.sendMessage('0' + values.join(';'));
     };
+    
+    this.sendGesture = function(gesture)
+    {
+    	var values = ['gesture', gesture];
+    	this.sendMessage('0' + values.join(';'));
+    }
     
     this.sendMessage = function (data)
     {

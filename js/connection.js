@@ -13,6 +13,8 @@ Connection = function ()
     this.__socket = null;
     this.__interval = null;
     
+    this.__pinch = 0;
+    
     this.init = function (address, port) 
     {
         this.address = address;
@@ -66,13 +68,24 @@ Connection = function ()
             mesurements.z.toFixed(this.precision),
             mesurements.alpha.toFixed(this.precision),
             mesurements.beta.toFixed(this.precision),
-            mesurements.gamma.toFixed(this.precision)
+            mesurements.gamma.toFixed(this.precision),
+            this.__pinch
         ];
         
         //Add prefix character 
         //because first character will get lost on the server side
         this.sendMessage('0' + values.join(';'));
     };
+    
+    this.setPinchStart = function(zoom)
+    {
+    	this.__pinch = 1 * zoom;	
+    }
+    
+    this.setPinchEnd = function()
+    {
+    	this.__pinch = 0;	
+    }
     
     this.sendGesture = function(gesture)
     {

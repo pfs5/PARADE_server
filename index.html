@@ -37,7 +37,7 @@
         
         var CON_ADDRESS = window.location.hostname;
         var CON_PORT = '9090';
-        var SENSOR_FREQ = 20;	//50
+        var SENSOR_FREQ = 500;	//50
         var TIMEOUT = null;		//30000;
         
         var LABEL = document.getElementById('Label');
@@ -100,19 +100,30 @@
 	var output = document.getElementById('element');
 	var mc = new Hammer(myElement);
 	
+	var pinchActive = false;
+	
 	// Enable events
 	mc.get('pinch').set({enable: true});	
 
 	// Events	
-	mc.on("pinchin pinchout", function(event){
+	mc.on("pinchstart pinchin", function(event){
 		output.innerHTML = event.type + ' gesture detected.';
-		con.sendGesture(event.type);
+		con.setPinchStart(1);
+	});
+
+	mc.on("pinchstart pinchout", function(event){
+		output.innerHTML = event.type + ' gesture detected.';
+		con.setPinchStart(-1);
+	});
+
+	mc.on("pinchend", function(event){
+		output.innerHTML = event.type + ' gesture detected.';
+		con.setPinchEnd();
 	});
 	
 	mc.on("tap doubletap", function(event){
 		output.innerHTML = event.type + ' gesture detected.';
 		con.sendGesture(event.type);
-		//gyro.calibrate();
 	});
 	
 	</script>

@@ -27,6 +27,7 @@
 <body>
     <p id="Label">Connecting...</p>
 	<div id="element">No input.</div>
+	<div id="output"></div>
 	<div class="overlay" id="back"></div>
 	
     <script src="js/gyro.min.js"></script>
@@ -36,8 +37,8 @@
         
         var CON_ADDRESS = window.location.hostname;
         var CON_PORT = '9090';
-        var SENSOR_FREQ = 50;
-        var TIMEOUT = null;//30000;
+        var SENSOR_FREQ = 20;	//50
+        var TIMEOUT = null;		//30000;
         
         var LABEL = document.getElementById('Label');
         
@@ -48,8 +49,18 @@
             LABEL.innerHTML = 'Connected successfully.';
             
             gyro.frequency = SENSOR_FREQ;
+            gyro.calibrate();
             gyro.startTracking(function(o) {
                 con.sendMeasurements(o);
+                
+                // Debug
+                var e = document.getElementById('output');
+                e.innerHTML = "<p> x = " + o.x + "</p>" +
+                          			"<p> y = " + o.y + "</p>" +
+                          			"<p> z = " + o.z + "</p>" +
+                          			"<p> alpha = " + o.alpha + "</p>" +
+                          			"<p> beta = " + o.beta + "</p>" +
+                          			"<p> gamma = " + o.gamma + "</p>";
             });
         };
         
@@ -101,7 +112,7 @@
 	mc.on("tap doubletap", function(event){
 		output.innerHTML = event.type + ' gesture detected.';
 		con.sendGesture(event.type);
-		//gyro.calibrate();	
+		//gyro.calibrate();
 	});
 	
 	</script>

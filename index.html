@@ -30,14 +30,15 @@
 	<div id="output"></div>
 	<div class="overlay" id="back"></div>
 	
-    <script src="js/gyro.min.js"></script>
+    <!--<script src="js/gyro.min.js"></script>-->
+    <script src="js/gyro.edited.js"></script>
     <script src="js/connection.js"></script>
 	<script src="js/hammer.min.js"></script>
     <script type="text/javascript">
         
         var CON_ADDRESS = window.location.hostname;
         var CON_PORT = '9090';
-        var SENSOR_FREQ = 500;	//50
+        var SENSOR_FREQ = 50;	//50
         var TIMEOUT = null;		//30000;
         
         var LABEL = document.getElementById('Label');
@@ -106,24 +107,29 @@
 	mc.get('pinch').set({enable: true});	
 
 	// Events	
-	mc.on("pinchstart pinchin", function(event){
-		output.innerHTML = event.type + ' gesture detected.';
-		con.setPinchStart(1);
-	});
-
-	mc.on("pinchstart pinchout", function(event){
+	mc.on("pinchstart pinchin", function(event) {
 		output.innerHTML = event.type + ' gesture detected.';
 		con.setPinchStart(-1);
 	});
 
-	mc.on("pinchend", function(event){
+	mc.on("pinchstart pinchout", function(event) {
+		output.innerHTML = event.type + ' gesture detected.';
+		con.setPinchStart(1);
+	});
+
+	mc.on("pinchend", function(event) {
 		output.innerHTML = event.type + ' gesture detected.';
 		con.setPinchEnd();
 	});
 	
-	mc.on("tap doubletap", function(event){
+	mc.on("tap", function(event) {
 		output.innerHTML = event.type + ' gesture detected.';
 		con.sendGesture(event.type);
+	});
+	
+	mc.on("doubletap", function(event) {
+		output.innerHTML = event.type + ' gesture detected.';
+		gyro.calibrate();
 	});
 	
 	</script>

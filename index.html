@@ -6,42 +6,38 @@
 
     <title>ParADE</title>
     
-    <style>
-        body {
-            background-color: black;
-            color: lightgray;
-            font-family: sans-serif;
-        }
-
-		.overlay{
-    		opacity:0.8;
-    		position:fixed;
-    		width:100%;
-    		height:100%;
-    		top:0px;
-    		left:0px;
-    		z-index:1000;
-		}
-    </style>
+    <link rel="stylesheet" type="text/css" href="/style.css">
 </head>
 <body>
     <p id="Label">Connecting...</p>
-	<div id="element">No input.</div>
-	<div id="output"></div>
-	<div class="overlay" id="back"></div>
-	
+    <div id="element">No input.</div>
+    <div id="output"></div>
+    
+    <div class="overlay" id="back">
+        <div id="key" class="invisible">
+            <div id="btn1"></div>
+            <div id="btn2"></div>
+            <div id="btn3"></div>
+        </div>
+    </div>
+    
     <!--<script src="js/gyro.min.js"></script>-->
     <script src="js/gyro.edited.js"></script>
     <script src="js/connection.js"></script>
-	<script src="js/hammer.min.js"></script>
+    <script src="js/hammer.min.js"></script>
+    <script src="js/jquery-3.1.1.slim.min.js"></script>
     <script type="text/javascript">
-        
         var CON_ADDRESS = window.location.hostname;
         var CON_PORT = '9090';
-        var SENSOR_FREQ = 50;	//50
-        var TIMEOUT = null;		//30000;
-        
+        var SENSOR_FREQ = 50;   //50
+        var TIMEOUT = null;     //30000;
+        var ENABLE_VIBRATE = false;
         var LABEL = document.getElementById('Label');
+        
+        if(ENABLE_VIBRATE)
+            navigator.vibrate = navigator.vibrate || navigator.webkitVibrate || navigator.mozVibrate || navigator.msVibrate;
+        
+        //document.documentElement.requestFullscreen();
         
         con.init(CON_ADDRESS, CON_PORT);
         
@@ -57,11 +53,11 @@
                 // Debug
                 var e = document.getElementById('output');
                 e.innerHTML = "<p> x = " + o.x + "</p>" +
-                          			"<p> y = " + o.y + "</p>" +
-                          			"<p> z = " + o.z + "</p>" +
-                          			"<p> alpha = " + o.alpha + "</p>" +
-                          			"<p> beta = " + o.beta + "</p>" +
-                          			"<p> gamma = " + o.gamma + "</p>";
+                                    "<p> y = " + o.y + "</p>" +
+                                    "<p> z = " + o.z + "</p>" +
+                                    "<p> alpha = " + o.alpha + "</p>" +
+                                    "<p> beta = " + o.beta + "</p>" +
+                                    "<p> gamma = " + o.gamma + "</p>";
             });
         };
         
@@ -78,60 +74,120 @@
             }, TIMEOUT);
         }
         
-//        gyro.startTracking(function(o) {
-//			var b = document.getElementById('example'),
-//				f = document.getElementById('features');
-//            
-//			f.innerHTML = gyro.getFeatures();
-//			b.innerHTML = "<p> x = " + o.x + "</p>" +
-//                          "<p> y = " + o.y + "</p>" +
-//                          "<p> z = " + o.z + "</p>" +
-//                          "<p> alpha = " + o.alpha + "</p>" +
-//                          "<p> beta = " + o.beta + "</p>" +
-//                          "<p> gamma = " + o.gamma + "</p>";
-//            
-//            con.sendMeasurements(o);
-//		});
+        // Touch gestures
+        var myElement = document.getElementById('back');
+        var output = document.getElementById('element');
+        var key = document.getElementById('key');
+        var mc = new Hammer(myElement);
+
+        var pinchTresh = 0.001;
+        var pinchActive = false;
         
+        var isKeyVisible = false;
+        
+        var debugEvent = function(event) {
+            output.innerHTML = event.type + ' gesture detected.';
+            
+            console.log(event);
+        }
+        
+        var hideKey = function () {
+            $('#key').addClass( "invisible" );
+            
+            isKeyVisible = !isKeyVisible;
+            
+            if(ENABLE_VIBRATE)
+                navigator.vibrate(50);
+        }
+        
+        var showKey = function () {
+            $('#key').removeClass( "invisible" );
+            
+            isKeyVisible = !isKeyVisible;
+            
+            if(ENABLE_VIBRATE)
+                navigator.vibrate(50);
+        }
+        
+        var toggleKey = function () {
+            if(isKeyVisible)
+                hideKey();
+            else
+                showKey();
+        }
+        
+        var tapButton = function () {
+                     
+            if(!isKeyVisible) return;
+            
+            var elem = $( event.target );
+            
+//            switch(elem.attr('id')) {
+//                case 'btn1':
+//                    
+//                    break;
+//                case 'btn2':
+//                    
+//                    break;
+//                case 'btn3':
+//                    
+//                    break;
+//            }
+            
+            con.sendButton(elem.attr('id'));
+            
+            if(elem.attr('id') == 'btn1' || elem.attr('id') == 'btn2' || elem.attr('id') == 'btn3') {
+                
+                if(elem.hasClass('tap'))
+                    elem.removeClass('tap');
+                else
+                    elem.addClass('tap');
+            }
+        }
+
+        // Enable events
+        mc.get('pinch').set({enable: true});    
+
+        // Events   
+        mc.on("pinchin pinchout", function(event) {
+            output.innerHTML = event.type;
+            var velocity = (Math.abs(event.velocity) > pinchTresh) ? Math.abs(event.velocity)*100 : 0;
+            var dir = (event.type == "pinchin") ? 1 : -1;
+            con.setPinchStart(velocity*dir);
+
+        });
+
+        mc.on("pinchend", function(event) {
+            debugEvent(event);
+            con.setPinchEnd();
+        });
+
+        mc.on("tap", function(event) {
+            debugEvent(event);
+            
+            tapButton(event);
+        });
+
+        mc.on("doubletap", function(event) {
+            debugEvent(event);
+            gyro.calibrate();
+        });
+        
+        mc.on("press", function(event) {
+            debugEvent(event);
+            
+            toggleKey();
+        });
+        
+        mc.on("pressup", function(event) {
+            
+            debugEvent(event);
+        });
+        
+        mc.on("swipe", function(event) {
+            
+            debugEvent(event);
+        });
     </script>
-
-	<script type="text/javascript">
-	// Touch gestures
-	var myElement = document.getElementById('back');
-	var output = document.getElementById('element');
-	var mc = new Hammer(myElement);
-	
-	var pinchActive = false;
-	
-	// Enable events
-	mc.get('pinch').set({enable: true});	
-
-	// Events	
-	mc.on("pinchstart pinchin", function(event) {
-		output.innerHTML = event.type + ' gesture detected.';
-		con.setPinchStart(-1);
-	});
-
-	mc.on("pinchstart pinchout", function(event) {
-		output.innerHTML = event.type + ' gesture detected.';
-		con.setPinchStart(1);
-	});
-
-	mc.on("pinchend", function(event) {
-		output.innerHTML = event.type + ' gesture detected.';
-		con.setPinchEnd();
-	});
-	
-	mc.on("tap", function(event) {
-		output.innerHTML = event.type + ' gesture detected.';
-		con.sendGesture(event.type);
-	});
-	
-	mc.on("doubletap", function(event) {
-		output.innerHTML = event.type + ' gesture detected.';
-		gyro.calibrate();
-	});
-	
-	</script>
 </body>
 </html>
